@@ -1,26 +1,113 @@
 import argparse
 import os
-# from pathlib import Path
+from pathlib import Path
 
 import torch
 import numpy as np
-import transforms3d
-# from skimage.io import imread
+import transforms3d.euler
+from skimage.io import imread
+from skimage.color import rgb2gray
 from tqdm import tqdm
 
 from ldm.base_utils import project_points, mask_depth_to_pts, pose_inverse, pose_apply, output_points, read_pickle
 import open3d as o3d
 import mesh2sdf
-import json
 import nvdiffrast.torch as dr
-import multiprocessing as mp
-import eval_dtu.evaluate_single_scene as eval_dtu
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor
+import matplotlib.pyplot as plt
 
 
+# DEPTH_MAX, DEPTH_MIN = 2.4, 0.6
+DEPTH_VALID_MAX, DEPTH_VALID_MIN = 0.8, 0.1
+def read_depth_objaverse(depth_fn):
+    depth = imread(depth_fn)
+    depth = rgb2gray(depth[..., :3])
+    # depth = depth.astype(np.float32) * (DEPTH_MAX-DEPTH_MIN) + DEPTH_MIN
+    depth = np.array(depth).astype(np.float32) 
+    mask = (depth > DEPTH_VALID_MIN) & (depth < DEPTH_VALID_MAX)
+    plt.imshow(mask)
+    plt.savefig(depth_fn.replace("depth","mask"))
+    return depth, mask
 
-def nearest_dist(pts0, pts1, batch_size=128):
+# H, W, NUM_IMAGES = 256, 256, 16
+# CACHE_DIR = './eval_mesh_pts'
+
+def rasterize_depth_map(mesh,pose,K,shape):
+    vertices = np.asarray(mesh.vertices, dtype=np.float32)
+    faces = np.asarray(mesh.triangles, dtype=np.int32)
+    pts, depth = project_points(vertices,pose,K)
+
+    # normalize to projection
+    h, w = shape
+    pts[:,0]=(pts[:,0]*2-w)/w
+    pts[:,1]=(pts[:,1]*2-h)/h
+    near, far = 5e-1, 1e2
+    z = (depth-near)/(far-near)
+    z = z*2 - 1
+    pts_clip = np.concatenate([pts,z[:,None]],1)
+
+    pts_clip = torch.from_numpy(pts_clip.astype(np.float32)).cuda()
+    indices = torch.from_numpy(faces.astype(np.int32)).cuda()
+    pts_clip = torch.cat([pts_clip,torch.ones_like(pts_clip[...,0:1])],1).unsqueeze(0)
+    ctx = dr.RasterizeCudaContext()
+    # print("pts_clip:",pts_clip.shape)
+    # print("indices:",indices.shape)
+    rast, _ = dr.rasterize(ctx, pts_clip, indices, (h, w)) # [1,h,w,4]
+    depth = (rast[0,:,:,2]+1)/2*(far-near)+near
+    mask = rast[0,:,:,-1]!=0
+    return depth.cpu().numpy(), mask.cpu().numpy().astype(bool)
+
+def ds_and_save(cache_dir, name, pts, cache=False):
+    cache_dir.mkdir(exist_ok=True, parents=True)
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(pts)
+    downpcd = pcd
+    # downpcd = pcd.voxel_down_sample(voxel_size=0.01)
+    if cache:
+        o3d.io.write_point_cloud(str(cache_dir/(name + '.ply')), downpcd)
+    return downpcd
+
+def get_points_from_mesh(mesh, name, output_dir, num_images, POSES, K, H, W, cache=False):
+    obj_name = name
+    cache_dir = Path(output_dir)
+    fn = cache_dir/f'{obj_name}.ply'
+    # if cache and fn.exists():
+    #     pcd = o3d.io.read_point_cloud(str(fn))
+    #     return np.asarray(pcd.points)
+
+
+    pts = []
+    for index in range(num_images):
+        pose = POSES[index]
+        depth, mask = rasterize_depth_map(mesh, pose, K, (H, W))
+        pts_ = mask_depth_to_pts(mask, depth, K)
+        pose_inv = pose_inverse(pose)
+        pts.append(pose_apply(pose_inv, pts_))
+
+    pts = np.concatenate(pts, 0).astype(np.float32)
+    downpcd = ds_and_save(cache_dir, obj_name, pts, True)
+    return np.asarray(downpcd.points,np.float32)
+
+def get_points_from_depth(depth_dir, obj_name, output_dir, NUM_IMAGES, POSES, K):
+    cache_dir = Path(output_dir)
+    fn = cache_dir/f'{obj_name}.ply'
+    # if fn.exists():
+    #     pcd = o3d.io.read_point_cloud(str(fn))
+    #     return np.asarray(pcd.points)
+
+    pts = []
+    for k in range(NUM_IMAGES):
+        depth, mask = read_depth_objaverse(os.path.join(depth_dir,f'{k:03}-depth.png'))
+        # print(depth.shape)
+        Height, Width = depth.shape
+        pts_ = mask_depth_to_pts(mask, depth, K)
+        pose_inv = pose_inverse(POSES[k])
+        pts.append(pose_apply(pose_inv, pts_))
+
+    pts = np.concatenate(pts, 0).astype(np.float32)
+    downpcd = ds_and_save(cache_dir, obj_name, pts, True)
+    return np.asarray(downpcd.points,np.float32), Height, Width
+
+def nearest_dist(pts0, pts1, batch_size=512):
     pts0 = torch.from_numpy(pts0.astype(np.float32)).cuda()
     pts1 = torch.from_numpy(pts1.astype(np.float32)).cuda()
     pn0, pn1 = pts0.shape[0], pts1.shape[0]
@@ -50,174 +137,73 @@ def transform_gt(vertices, rot_angle):
 
     return vertices
 
-def mesh_to_voxels(mesh, resolution=32):
-    # Get the voxel grid
-    mesh.scale(1 / np.max(mesh.get_max_bound() - mesh.get_min_bound()), center=mesh.get_center())
-    voxel_grid = o3d.geometry.VoxelGrid.create_from_triangle_mesh(mesh, voxel_size=1.0 / resolution)
 
-    # Initialize the 3D grid
-    grid_shape = (resolution, resolution, resolution)
-    voxel_data = np.zeros(grid_shape, dtype=bool)
+def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K):
+    H, W = 256, 256
+    pts_gt = get_points_from_mesh(mesh_gt, name+"_gt", output, NUM_IMAGES, POSES, K, H, W)
+    # pts_gt, H, W = get_points_from_depth(gt_dir, name+"_gt", output, NUM_IMAGES, POSES, K)
+    pts_pr = get_points_from_mesh(mesh_pr, name+"_pr", output, NUM_IMAGES, POSES, K, H, W)
 
+    # pcd_pr=o3d.geometry.PointCloud()
+    # pcd_pr.points = o3d.utility.Vector3dVector(pts_pr)
+    # pcd_pr.paint_uniform_color([1.0, 0, 0])
+    # pcd_gt=o3d.geometry.PointCloud()
+    # pcd_gt.points = o3d.utility.Vector3dVector(pts_gt)
+    # pcd_gt.paint_uniform_color([0, 1.0, 0])
+    # o3d.visualization.draw_geometries([pcd_pr,pcd_gt])
 
-    def process_voxel(voxel):
-        grid_idx = voxel.grid_index
-        if grid_idx[0] < resolution and grid_idx[1] < resolution and grid_idx[2] < resolution:
-            voxel_data[grid_idx[0], grid_idx[1], grid_idx[2]] = True
-
-    with ThreadPoolExecutor() as executor:
-        executor.map(process_voxel, tqdm(voxel_grid.get_voxels()))
-
-    return voxel_data
-
-def get_iou(mesh_pr, mesh_gt, out_dir):
     # compute iou
-    print('voxelization')
-    vol_pr  = mesh_to_voxels(mesh_pr, resolution=128)
-    vol_gt  = mesh_to_voxels(mesh_gt, resolution=128)    
-    np.save(os.path.join(out_dir,r'vol_pr.npy'), vol_pr)
-    np.save(os.path.join(out_dir,r'vol_gt.npy'), vol_gt)
+    size = 128
+    sdf_pr = mesh2sdf.compute(mesh_pr.vertices, mesh_pr.triangles, size, fix=False, return_mesh=False)
+    sdf_gt = mesh2sdf.compute(mesh_gt.vertices, mesh_gt.triangles, size, fix=False, return_mesh=False)
+    vol_pr = sdf_pr<0
+    vol_gt = sdf_gt<0
+    # plt.subplot(121)
+    # plt.imshow(vol_gt.max(axis = 2), cmap='gray')
+    # plt.subplot(122)
+    # plt.imshow(vol_pr.max(axis = 2), cmap='gray')
+    # plt.colorbar()
+    # plt.show()
 
-    iou = np.sum(np.logical_and(vol_pr,vol_gt))/np.sum(np.logical_or(vol_gt, vol_pr))
-    print("iou", iou)
-    return iou
+    iou = np.sum(vol_pr & vol_gt)/np.sum(vol_gt | vol_pr)
+    np.save(os.path.join(output,"vol_gt"),vol_gt)
+    np.save(os.path.join(output,"vol_pr"),vol_pr)
+    # print(vol_pr.max())
+    # print(vol_gt.max())
 
+    dist0 = nearest_dist(pts_pr, pts_gt, batch_size=4096)
+    dist1 = nearest_dist(pts_gt, pts_pr, batch_size=4096)
 
-def preprocess_mesh(mesh_pr, mesh_gt, mesh_downsample=True):
-    if mesh_downsample:
-        voxel_size_gt = max(mesh_gt.get_max_bound() - mesh_gt.get_min_bound()) 
-        voxel_size_pr = max(mesh_pr.get_max_bound() - mesh_pr.get_min_bound())
-        print(f'volume_size of gt :{voxel_size_gt:e}')
-        print(f'volume_size of pr :{voxel_size_pr:e}')
-        scale = voxel_size_gt / voxel_size_pr
-        voxel_size = voxel_size_pr*scale
-        mesh_downsample = mesh_pr.simplify_vertex_clustering(
-            voxel_size=voxel_size,
-            contraction=o3d.geometry.SimplificationContraction.Average)
-        mesh_pr = mesh_downsample
+    chamfer = (np.mean(dist0) + np.mean(dist1)) / 2
+    return chamfer, iou
 
-    # Load bbox and mask
-    # bbox = np.load('bbox.npy')
-    # mask = np.load('mask.npy')
-
-    # Apply bbox and mask to mesh
-    # mesh_pr = apply_bbox_and_mask(mesh_pr, bbox, mask)
-
-    return mesh_pr
-def nn_correspondance(verts1, verts2, truncation_dist, ignore_outlier=True):
-    """ for each vertex in verts2 find the nearest vertex in verts1
-    Args:
-        nx3 np.array's
-        scalar truncation_dist: points whose nearest neighbor is farther than the distance would not be taken into account
-    Returns:
-        ([indices], [distances])
-    """
-
-    indices = []
-    distances = []
-    dist_ls = []
-    if len(verts1) == 0 or len(verts2) == 0:
-        return indices, distances
-
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(verts1.astype(np.float64))
-    kdtree = o3d.geometry.KDTreeFlann(pcd)
-
-    truncation_dist_square = truncation_dist**2
-
-    for vert in verts2:
-        _, inds, dist_square = kdtree.search_knn_vector_3d(vert, 1)
-        dist_ls = np.append(dist_ls, np.sqrt(dist_square[0]))
-        if dist_square[0] < truncation_dist_square:
-            indices.append(inds[0])
-            distances.append(np.sqrt(dist_square[0]))
-        else:
-            if not ignore_outlier:
-                indices.append(inds[0])
-                distances.append(truncation_dist)
-
-    return indices, distances
-
-# python eval_mesh.py --pr_mesh eval_examples/chicken-pr.ply --pr_name chicken --gt_dir eval_examples/chicken-gt --gt_mesh eval_examples/chicken-mesh/meshes/model.obj --gt_name chicken
-# python eval_mesh.py --pr_mesh D:\2d-gaussian-splatting\output\ec536168-0\train\ours_30000\fuse_unbounded_post.ply --name LEGO_Duplo_Build_and_Play_Box_4629 --pr_type tsdf  --gt_mesh D:\Free3D\MVS_data\render_res\LEGO_Duplo_Build_and_Play_Box_4629\mesh\meshes\model.obj --gt_type mesh --cameras_path D:\2d-gaussian-splatting\output\ec536168-0\cameras.json --output 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pr_mesh', type=str, default=r"D:\wyh\eval_mvs\dtu122\train\ours_30000\fuse_post.ply")
-    parser.add_argument('--pr_dir', type=str, default=r"D:\wyh\eval_mvs\dtu122")
-    parser.add_argument('--pr_type', type=str, default="mesh")
-    parser.add_argument('--gt_mesh', type=str, default=r"D:\wyh\eval_mvs\dtu_data\MVS_dataset")
-    parser.add_argument('--gt_mesh_colmap', type=str, default=r"D:\wyh\eval_mvs\dtu_data")
-    parser.add_argument('--gt_mesh_mask', type=str, default=r"D:\wyh\eval_mvs\dtu_data\mask\scan122.ply")
-    # parser.add_argument('--name', type=str, default="LEGO_Duplo_Build_and_Play_Box_4629")
-    # parser.add_argument('--gt_type', type=str, default="mesh")
-    parser.add_argument('--threshold', type=float, default=600)
-    parser.add_argument('--downsample', action='store_true', default=False)
-    # parser.add_argument('--output', action='store_true', default=True, dest='output')
+    parser.add_argument('--pr_mesh', type=str, default=r"D:\wyh\InstantMesh\outputs\instant-mesh-large\meshes\Ecoforms_Plant_Container_FB6_Tur.obj")
+    parser.add_argument('--name', type=str, default="instantmesh")
+    parser.add_argument('--camera_info_dir', type=str, default="Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt")
+    parser.add_argument('--num_images', type=int , default=6)
+    parser.add_argument('--gt_mesh', type=str, default="Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj")
+    parser.add_argument('--output', type=str, default='output')
     args = parser.parse_args()
-
-    # preprocess mesh
-    print("preprocessing mesh")
-    ply_file = os.path.join(args.pr_mesh)
-    out_dir = os.path.join(args.pr_dir, "eval_dtu")
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
-    pr_mesh_path = os.path.join(out_dir, r"culled_mesh.ply")
-    gt_mesh_path = os.path.join(args.gt_mesh_mask)
-    # eval_dtu.cull_scan(122, ply_file, pr_mesh_path, args.gt_mesh_colmap)
-
-    mesh_gt = o3d.io.read_triangle_mesh(gt_mesh_path)
+    
+    K, _, _, _, POSES = read_pickle(os.path.join(args.camera_info_dir, f'meta.pkl'))
+    mesh_gt = o3d.io.read_triangle_mesh(args.gt_mesh)
+    mesh_gt.scale(1 / np.max(mesh_gt.get_max_bound() - mesh_gt.get_min_bound()), mesh_gt.get_center())
     vertices_gt = np.asarray(mesh_gt.vertices)
     mesh_gt.vertices = o3d.utility.Vector3dVector(vertices_gt)
-    
-    mesh_pr = o3d.io.read_triangle_mesh(pr_mesh_path)
+
+    mesh_pr = o3d.io.read_triangle_mesh(args.pr_mesh)
+    mesh_pr.scale(1 / np.max(mesh_pr.get_max_bound() - mesh_pr.get_min_bound()), mesh_pr.get_center())
     vertices_pr = np.asarray(mesh_pr.vertices)
     mesh_pr.vertices = o3d.utility.Vector3dVector(vertices_pr)
 
-    voxel_size_gt = max(mesh_gt.get_max_bound() - mesh_gt.get_min_bound()) 
-    voxel_size_pr = max(mesh_pr.get_max_bound() - mesh_pr.get_min_bound())
-    print(f'voxel_size of gt :{voxel_size_gt:e}')
-    print(f'voxel_size of pr :{voxel_size_pr:e}')
-    print("mesh_pr", vertices_pr.shape)
-    print("mesh_gt", vertices_gt.shape)
+    chamfer, iou = get_chamfer_iou(mesh_pr, mesh_gt, args.name, args.camera_info_dir, args.output, args.num_images, POSES, K)
 
-    if args.downsample:
-        scale = 0.01
-        mesh_downsample = mesh_pr.simplify_vertex_clustering(
-            voxel_size=voxel_size_pr*scale,
-            contraction=o3d.geometry.SimplificationContraction.Average)
-        mesh_pr = mesh_downsample
-        mesh_downsample = mesh_gt.simplify_vertex_clustering(
-            voxel_size=voxel_size_gt*scale,
-            contraction=o3d.geometry.SimplificationContraction.Average)
-        mesh_gt = mesh_downsample
-        vertices_pr = np.asarray(mesh_pr.vertices)
-        vertices_gt = np.asarray(mesh_gt.vertices)
-        print("mesh_pr", vertices_pr.shape)
-        print("mesh_gt", vertices_gt.shape)
-
-    # print("computing chamfer")
-    # cmd = f"python .\eval_dtu\eval.py --data {pr_mesh_path} --scan {122} --mode {args.pr_type} --dataset_dir {args.gt_mesh} --vis_out_dir {out_dir}"
-    # print(cmd)
-    # os.system(cmd)
-
-    print("computing iou")
-    iou = get_iou(mesh_pr, mesh_gt, out_dir)
-
-    threshold = args.threshold # how to set this threshold?
-    print("computing f_score")
-    pts_pr_o3d = o3d.geometry.PointCloud()
-    pts_pr_o3d.points = o3d.utility.Vector3dVector(vertices_pr)
-    pts_gt_o3d = o3d.geometry.PointCloud()
-    pts_gt_o3d.points = o3d.utility.Vector3dVector(vertices_gt)
-
-    dist_p = pts_pr_o3d.compute_point_cloud_distance(pts_gt_o3d)
-    dist_r = pts_gt_o3d.compute_point_cloud_distance(pts_pr_o3d)
-    recall = float(sum(d < threshold for d in dist_p)) / float(len(dist_p))
-    precision = float(sum(d < threshold for d in dist_r)) / float(len(dist_r))
-    f_score = 2 * precision * recall / (precision + recall + 1e-8) # %
-    
-    print("f_score", f_score)
-    print("precision", precision)
-    print("recall", recall)
+    results = f'{args.name}\t{chamfer:.5f}\t{iou:.5f}'
+    print(results)
+    with open('logs/geometry.log','a') as f:
+        f.write(results+'\n')
 
 if __name__=="__main__":
     main()

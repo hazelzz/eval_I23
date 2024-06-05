@@ -127,10 +127,10 @@ def mask_depth_to_pts(mask,depth,K,rgb=None):
     depth=depth[hs,ws]
     pts=np.asarray([ws,hs,depth],np.float32).transpose()
     pts[:,:2]*=pts[:,2:]
-    if rgb is not None:
-        return np.dot(pts, np.linalg.inv(K).transpose()), rgb[hs,ws]
-    else:
-        return np.dot(pts, np.linalg.inv(K).transpose())
+    # if rgb is not None:
+    #     return np.dot(pts, np.linalg.inv(K).transpose()), rgb[hs,ws]
+    # else:
+    return np.dot(pts, np.linalg.inv(K).transpose())
 
 def transform_points_pose(pts, pose):
     R, t = pose[:, :3], pose[:, 3]
