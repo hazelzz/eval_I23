@@ -7,7 +7,7 @@
 - [ ] [Zero-1-to-3: Zero-shot One Image to 3D Object](https://github.com/cvlab-columbia/zero123)
 - [ ] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
 - [ ] [Wonder3D](https://github.com/xxlong0/Wonder3D.git)
-- [ ] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
+- [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
 - [ ] [MVDream](https://github.com/bytedance/MVDream)
 - [ ] [Era3D: High-Resolution Multiview Diffusion using Efficient Row-wise Attention](https://github.com/pengHTYX/Era3D.git)
 - [ ] [OpenLRM: Open-Source Large Reconstruction Models](https://github.com/3DTopia/OpenLRM)
