@@ -17,33 +17,32 @@
 ### Render the result of the specified perspective
 0. Download blender script from [utl](https://download.blender.org/release/Blender3.2) and unzip it at current path.
 1. Replace the desired degrees in [view_ls.txt](view_ls.txt). The first column points to elevation and the second column points to azimuth. 
-2. Run ```blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path <Path to mesh> --output_dir <Path to outputs>  --num_images <Number of rendered images>
-```
+2. Run 
+```blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path <Path to mesh> --output_dir <Path to outputs>  --num_images <Number of rendered images>```
 You can set cammera distance through ```--camera_dist <float>``` which default is 2. 
-eg.
-```
-blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 6
-```
+
+    eg. ``` blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 6 ```
+
 3. Organize the files in following format:
-```
-<case_name>
-|-- <case_name>-gt (rendered by yourself)
-    |-- 000-depth.png        # target depth map for each view
-    |-- 000.png        # target image for each view
-    |-- 001-depth.png 
-    |-- 001.png
+    ```
+    <case_name>
+    |-- <case_name>-gt (rendered by yourself)
+        |-- 000-depth.png        # target depth map for each view
+        |-- 000.png        # target image for each view
+        |-- 001-depth.png 
+        |-- 001.png
+        ...
+        |-- meta.pkl     # camera infomation
+    |-- <case_name>-mesh           
+        |-- materials    
+        |-- meshes 
+            |-- models.mtl    
+            |-- models.obj    # target mesh
+            |-- texture.png    
+        |-- thumbnails
+        ...
     ...
-    |-- meta.pkl     # camera infomation
-|-- <case_name>-mesh           
-    |-- materials    
-    |-- meshes 
-        |-- models.mtl    
-        |-- models.obj    # target mesh
-        |-- texture.png    
-    |-- thumbnails
-    ...
-...
-```
+    ```
 Recommend selecting fisrt image as input.
 ## Evaluation Metrics
 0. Run specific method and *tuning hyperparameters*  (set voxel_size=0.5 if possible)
@@ -54,7 +53,9 @@ tips：
 ### Evaluation for rendered images 
 ```
 python eval_nvs.py --gt <Path to ground truth> --pr <Path to rendered images>  --name <Case Name> --num_images <Number of evaluated images>
-# eg.
+```
+For example
+```
 python eval_nvs.py --gt D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt --pr D:\wyh\InstantMesh\outputs\instant-mesh-large\images\Ecoforms_Plant_Container_FB6_Tur  --name InstantMesh --num_images 6
 
 ```
@@ -68,7 +69,9 @@ Before running teh command, please read these items:
 This version need to be tested. Please wait for updating.
 ```
 python eval_mesh.py --pr_mesh <Path to predicted mesh directory> --pr_type "mesh" or "pcd"   --gt_mesh <Path to ground truth directory> --gt_mesh_colmap <Path to ground truth colmap directory> --gt_mesh_mask <Path to ground truth mesh> --downsample
-# eg.
+```
+For example
+```
 python eval_mesh_syncdreamer.py --pr_mesh D:\wyh\InstantMesh\outputs\instant-mesh-large\meshes\Ecoforms_Plant_Container_FB6_Tur.obj --name instantmesh --camera_info_dir Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt --num_images 6 --gt_mesh Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output logs
 ```
 
@@ -86,5 +89,7 @@ Please communicate in a timely manner
 ## Related projects
 We collect code from following projects. We thanks for the contributions from the open-source community!
 [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
+
 [DTUeval-python](https://github.com/jzhangbs/DTUeval-python)
+
 [TanksAndTemples](https://github.com/isl-org/TanksAndTemples/tree/master)
