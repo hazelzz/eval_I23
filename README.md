@@ -10,6 +10,7 @@
 - [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
 - [ ] [MVDream](https://github.com/bytedance/MVDream)
 - [ ] [Era3D: High-Resolution Multiview Diffusion using Efficient Row-wise Attention](https://github.com/pengHTYX/Era3D.git)
+- [ ] [SyncMVD](https://github.com/LIU-Yuxin/SyncMVD)
 - [ ] [OpenLRM: Open-Source Large Reconstruction Models](https://github.com/3DTopia/OpenLRM)
 - [ ] [Lightplane](https://github.com/facebookresearch/lightplane)
 
