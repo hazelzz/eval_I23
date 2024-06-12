@@ -8,6 +8,7 @@
 - [ ] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
 - [ ] [Wonder3D](https://github.com/xxlong0/Wonder3D.git)
 - [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
+- [] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
 - [ ] [MVDream](https://github.com/bytedance/MVDream)
 - [ ] [Era3D: High-Resolution Multiview Diffusion using Efficient Row-wise Attention](https://github.com/pengHTYX/Era3D.git)
 - [ ] [SyncMVD](https://github.com/LIU-Yuxin/SyncMVD)
