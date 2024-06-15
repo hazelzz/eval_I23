@@ -7,14 +7,12 @@
 - [ ] [Zero-1-to-3: Zero-shot One Image to 3D Object](https://github.com/cvlab-columbia/zero123)
 - [ ] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
 - [ ] [Wonder3D](https://github.com/xxlong0/Wonder3D.git)
-- [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
-- [] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
+- [ ] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
+- [ ] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
 - [ ] [MVDream](https://github.com/bytedance/MVDream)
 - [ ] [EpiDiff](https://github.com/huanngzh/EpiDiff)
 - [ ] [Splatter Image: Ultra-Fast Single-View 3D Reconstruction](https://github.com/szymanowiczs/splatter-image)
 - [ ] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/ubc-vision/vivid123)
-- [ ] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/alibaba/VideoMV)
-- [ ] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/alibaba/VideoMV)
 - [ ] [VideoMV: Consistent Multi-View Generation Based on Large Video Generative Model.](https://github.com/ubc-vision/vivid123)
 - [ ] [TriplaneGaussian](https://github.com/VAST-AI-Research/TriplaneGaussian)
 - [ ] [OpenLRM: Open-Source Large Reconstruction Models](https://github.com/3DTopia/OpenLRM)
@@ -25,10 +23,15 @@
 0. Download blender script from [utl](https://download.blender.org/release/Blender3.2) and unzip it at current path.
 1. Replace the desired degrees in [view_ls.txt](view_ls.txt). The first column points to elevation and the second column points to azimuth. 
 2. Run 
-```blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path <Path to mesh> --output_dir <Path to outputs>  --num_images <Number of rendered images>```
+```
+blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path <Path to mesh> --output_dir <Path to outputs>  --num_images <Number of rendered images>
+```
 You can set cammera distance through ```--camera_dist <float>``` which default is 2. 
 
-    eg. ``` blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 6 ```
+    eg. 
+    ``` 
+    blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 7
+    ```
 
 3. Organize the files in following format:
     ```

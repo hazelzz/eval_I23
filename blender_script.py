@@ -256,7 +256,7 @@ def save_images(object_file: str) -> None:
     pi = math.pi
     # print(view_ls)
     azimuths = view_ls[:,1]*pi/180
-    elevations = (-view_ls[:,0])*pi/180
+    elevations = (view_ls[:,0])*pi/180
     print("elevations:",view_ls[:,0])
     print("azimuths",view_ls[:,1])
     # return
@@ -296,22 +296,6 @@ def save_images(object_file: str) -> None:
         # These values may need to be tweaked depending on your scene
         normal_value_node.offset = [-0.7]
         normal_value_node.size = [0.1]
-
-        # Create Color Ramp node
-        # color_ramp_node = tree.nodes.new('CompositorNodeValToRGB')
-        # # Configure Color Ramp node
-        # color_ramp_node.color_ramp.color_mode = 'RGB'
-        # color_ramp_node.color_ramp.interpolation = 'LINEAR'
-        # color_ramp_node.color_ramp.elements[0].position = 0
-        # color_ramp_node.color_ramp.elements[0].color = (0, 0, 0, 1)
-        # # color_ramp_node.color_ramp.elements[1].position = 0.95
-        # # color_ramp_node.color_ramp.elements[1].color = (0.191, 0.191, 0.191, 1)
-        # color_ramp_node.color_ramp.elements[1].position = 1
-        # color_ramp_node.color_ramp.elements[1].color = (1, 1, 1, 1)
-
-        # new_element = color_ramp_node.color_ramp.elements.new(0.95)
-        # Set color of new element
-        # new_element.color = (0.191, 0.191, 0.191, 1) # Red color
 
         output_node = tree.nodes.new('CompositorNodeComposite')
         output_node.use_alpha = True
