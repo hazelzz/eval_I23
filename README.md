@@ -6,15 +6,10 @@
 ### Image to 3D Methods
 - [x] [Zero-1-to-3: Zero-shot One Image to 3D Object](https://github.com/cvlab-columbia/zero123)
 - [x] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
-- [ ] [Wonder3D](https://github.com/xxlong0/Wonder3D.git)
+- [x] [Era3D](https://github.com/xxlong0/Wonder3D.git)
 - [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
 - [x] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
-- [OOM] [EpiDiff](https://github.com/huanngzh/EpiDiff)
 - [x] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/ubc-vision/vivid123)
-- [OOM] [VideoMV: Consistent Multi-View Generation Based on Large Video Generative Model.](https://github.com/alibaba/VideoMV)
-- [ ] [TriplaneGaussian](https://github.com/VAST-AI-Research/TriplaneGaussian)
-- [ ] [DreamComposer: Controllable 3D Object Generation via Multi-View Conditions](https://github.com/yhyang-myron/DreamComposer)
-- [ ] [OpenLRM: Open-Source Large Reconstruction Models](https://github.com/3DTopia/OpenLRM)
 
 ## Dataset
 ### Render the result of the specified perspective
