@@ -8,11 +8,10 @@
 - [x] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
 - [ ] [Wonder3D](https://github.com/xxlong0/Wonder3D.git)
 - [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
-- [ ] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
-- [ ] [MVDream](https://github.com/bytedance/MVDream)
+- [x] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
 - [OOM] [EpiDiff](https://github.com/huanngzh/EpiDiff)
-- [ ] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/ubc-vision/vivid123)
-- [ ] [VideoMV: Consistent Multi-View Generation Based on Large Video Generative Model.](https://github.com/alibaba/VideoMV)
+- [x] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/ubc-vision/vivid123)
+- [OOM] [VideoMV: Consistent Multi-View Generation Based on Large Video Generative Model.](https://github.com/alibaba/VideoMV)
 - [ ] [TriplaneGaussian](https://github.com/VAST-AI-Research/TriplaneGaussian)
 - [ ] [DreamComposer: Controllable 3D Object Generation via Multi-View Conditions](https://github.com/yhyang-myron/DreamComposer)
 - [ ] [OpenLRM: Open-Source Large Reconstruction Models](https://github.com/3DTopia/OpenLRM)
@@ -29,7 +28,7 @@ You can set cammera distance through ```--camera_dist <float>``` which default i
 
     eg. 
     ``` 
-    blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 28
+    blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 34
     ```
 
 3. Organize the files in following format:
