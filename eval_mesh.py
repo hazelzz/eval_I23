@@ -130,12 +130,29 @@ def norm_coords(vertices):
     vertices = vertices - center[None, :]
     return vertices
 
-def transform_gt(vertices, rot_angle):
+def transform_pr(vertices, rot_angle):
     vertices = norm_coords(vertices)
-    R = transforms3d.euler.euler2mat(-np.deg2rad(rot_angle), 0, 0, 'szyx')
+    R = transforms3d.euler.euler2mat(rot_angle[0], rot_angle[1], rot_angle[2], 'szyx')
     vertices = vertices @ R.T
 
     return vertices
+
+def get_gt_rotate_angle(object_name):
+    angle = [0, 0, 0]
+    if not object_name.find('CRM') == -1:
+        print("The method is CRM")
+        angle[2] += np.pi /2
+        angle[1] += np.pi /2
+    # elif object_name in ['blocks', 'alarm', 'backpack', 'chicken', 'soap', 'grandfather', 'grandmother', 'lion', 'lunch_bag', 'mario', 'oil']:
+    #     angle += np.pi / 2 * 3
+    # elif object_name in ['elephant', 'school_bus1']:
+    #     angle += np.pi
+    # elif object_name in ['school_bus2', 'shoe', 'train', 'turtle']:
+    #     angle += np.pi / 8 * 10
+    # elif object_name in ['sorter']:
+    #     angle += np.pi / 8 * 5
+    # angle = np.rad2deg(angle)
+    return angle
 
 
 def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K):
@@ -177,6 +194,14 @@ def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K
     chamfer = (np.mean(dist0) + np.mean(dist1)) / 2
     return chamfer, iou
 
+# python eval_mesh.py 
+#     --pr_mesh \\tsclient\F\kaogu\CRM\Users\dell\AppData\Local\Temp\tmptuyj27uv.obj 
+#     --name CRM 
+#     --camera_info_dir D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt 
+#     --num_images 12  
+#     --gt_mesh D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes 
+#     --output logs
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--pr_mesh', type=str, default=r"D:\wyh\InstantMesh\outputs\instant-mesh-large\meshes\Ecoforms_Plant_Container_FB6_Tur.obj")
@@ -196,8 +221,15 @@ def main():
     mesh_pr = o3d.io.read_triangle_mesh(args.pr_mesh)
     mesh_pr.scale(1 / np.max(mesh_pr.get_max_bound() - mesh_pr.get_min_bound()), mesh_pr.get_center())
     vertices_pr = np.asarray(mesh_pr.vertices)
+    vertices_pr = transform_pr(vertices_pr, get_gt_rotate_angle(args.name))
     mesh_pr.vertices = o3d.utility.Vector3dVector(vertices_pr)
 
+    # mesh_pr.compute_vertex_normals()
+    # mesh_pr.paint_uniform_color([0.9, 0.1, 0.1])
+    # mesh_gt.compute_vertex_normals()
+    # mesh_gt.paint_uniform_color([0.1, 0.1, 0.7])
+    # o3d.visualization.draw_geometries([mesh_pr, mesh_gt])
+    # return
     chamfer, iou = get_chamfer_iou(mesh_pr, mesh_gt, args.name, args.camera_info_dir, args.output, args.num_images, POSES, K)
 
     results = f'{args.name}\t{chamfer:.5f}\t{iou:.5f}'

@@ -4,19 +4,18 @@
 
 ## Methods to evaluate
 ### Image to 3D Methods
-- [ ] [Zero-1-to-3: Zero-shot One Image to 3D Object](https://github.com/cvlab-columbia/zero123)
-- [ ] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
+- [x] [Zero-1-to-3: Zero-shot One Image to 3D Object](https://github.com/cvlab-columbia/zero123)
+- [x] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
 - [ ] [Wonder3D](https://github.com/xxlong0/Wonder3D.git)
-- [ ] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
+- [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
 - [ ] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
 - [ ] [MVDream](https://github.com/bytedance/MVDream)
-- [ ] [EpiDiff](https://github.com/huanngzh/EpiDiff)
-- [ ] [Splatter Image: Ultra-Fast Single-View 3D Reconstruction](https://github.com/szymanowiczs/splatter-image)
+- [OOM] [EpiDiff](https://github.com/huanngzh/EpiDiff)
 - [ ] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/ubc-vision/vivid123)
-- [ ] [VideoMV: Consistent Multi-View Generation Based on Large Video Generative Model.](https://github.com/ubc-vision/vivid123)
+- [ ] [VideoMV: Consistent Multi-View Generation Based on Large Video Generative Model.](https://github.com/alibaba/VideoMV)
 - [ ] [TriplaneGaussian](https://github.com/VAST-AI-Research/TriplaneGaussian)
+- [ ] [DreamComposer: Controllable 3D Object Generation via Multi-View Conditions](https://github.com/yhyang-myron/DreamComposer)
 - [ ] [OpenLRM: Open-Source Large Reconstruction Models](https://github.com/3DTopia/OpenLRM)
-- [ ] [Lightplane](https://github.com/facebookresearch/lightplane)
 
 ## Dataset
 ### Render the result of the specified perspective
@@ -30,7 +29,7 @@ You can set cammera distance through ```--camera_dist <float>``` which default i
 
     eg. 
     ``` 
-    blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 7
+    blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 28
     ```
 
 3. Organize the files in following format:
@@ -78,11 +77,15 @@ Before running teh command, please read these items:
 ### Evaluation for mesh
 This version need to be tested. Please wait for updating.
 ```
+# Optional (If encounter "DistutilsPlatformError", use it)
+SET DISTUTILS_USE_SDK=1
+SET MSSdk=1
+
 python eval_mesh.py --pr_mesh <Path to predicted mesh directory> --pr_type "mesh" or "pcd"   --gt_mesh <Path to ground truth directory> --gt_mesh_colmap <Path to ground truth colmap directory> --gt_mesh_mask <Path to ground truth mesh> --downsample
 ```
 For example
 ```
-python eval_mesh_syncdreamer.py --pr_mesh D:\wyh\InstantMesh\outputs\instant-mesh-large\meshes\Ecoforms_Plant_Container_FB6_Tur.obj --name instantmesh --camera_info_dir Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt --num_images 6 --gt_mesh Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output logs
+python eval_mesh.py --pr_mesh D:\wyh\InstantMesh\outputs\instant-mesh-large\meshes\Ecoforms_Plant_Container_FB6_Tur.obj --name instantmesh --camera_info_dir Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt --num_images 12 --gt_mesh Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output logs
 ```
 
 ## Reporting Results
