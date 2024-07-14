@@ -23,7 +23,7 @@ You can set cammera distance through ```--camera_dist <float>``` which default i
 
     eg. 
     ``` 
-    blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path D:\wyh\eval_I23\Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output_dir ./Ecoforms_Plant_Container_FB6_Tur/Ecoforms_Plant_Container_FB6_Tur-gt  --num_images 34
+    blender-3.2.2-windows-x64\blender.exe --background --python blender_script.py -- --object_path \\tsclient\F\kaogu\ti_dataset_mesh\Ecoforms_Cup_B4_SAN\meshes\model.obj --output_dir \\tsclient\F\kaogu\ti_dataset_mesh\Ecoforms_Cup_B4_SAN  --num_images 7
     ```
 
 3. Organize the files in following format:
