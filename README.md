@@ -1,17 +1,32 @@
 # Evaluation of Image to 3D Methods
 
 ## Introduction
+This repository is used to evaluate the performance of various methods for generating 3D models from a single image in a small dataset with diversity. 
 
+First of all, we need to have a division of labor to run the results of various methods, and then run the evaluation indicators of the corresponding methods. 
+
+We hope that you will try to complete it by **July 24, 2024**. 
+
+The following are the methods that need to be assessed, with parentheses representing the members responsible for the methodology:
 ## Methods to evaluate
 ### Image to 3D Methods
-- [x] [Zero-1-to-3: Zero-shot One Image to 3D Object](https://github.com/cvlab-columbia/zero123)
-- [x] [Convolutional Reconstruction Model](https://github.com/thu-ml/CRM.git)
-- [x] [Era3D](https://github.com/xxlong0/Wonder3D.git)
-- [x] [InstantMesh: Efficient 3D Mesh Generation from a Single Image with Sparse-view Large Reconstruction Models](https://github.com/TencentARC/InstantMesh)
-- [x] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main)
-- [x] [ViVid-1-to-3: Novel View Synthesis with Video Diffusion Models](https://github.com/ubc-vision/vivid123)
+- [] [Zero-1-to-3 ++](https://github.com/SUDO-AI-3D/zero123plus) (chz)
+- [] [CRM](https://github.com/thu-ml/CRM) (yl)
+- [] [Era3D](https://github.com/pengHTYX/Era3D) (xf)
+- [] [InstantMesh](https://github.com/TencentARC/InstantMesh) (yl)
+- [] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main) (chz)
+- [] [ViVid-1-to-3](https://github.com/ubc-vision/vivid123) (wyh)
+- [] [Wonder3d](https://github.com/xxlong0/Wonder3D) (xf)
+- [] [Free3D](https://github.com/ubc-vision/vivid123) (wyh)
 
 ## Dataset
+We have three dataset options:
+1. GSO contains around 1K objects, from which we randomly pick out 300 objects as the evaluation set. （InstantMesh）
+2. SyncDreamer datasets: randomly chose 30 objects ranging from daily objects to animals. [link](https://connecthkuhk-my.sharepoint.com/personal/yuanly_connect_hku_hk/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fyuanly%5Fconnect%5Fhku%5Fhk%2FDocuments%2FSyncDreamer&ga=1)
+3. ViVid-1-to-3: 100 shapes from the Google Scanned Object (GSO) dataset [link](https://drive.google.com/file/d/1A9PJDRD27igX5p88slWVF_QSDKxaZDCZ/view)
+
+The dataset can be rendered according to the following content to specify the viewing angle, if necessary, you can render it yourself.
+
 ### Render the result of the specified perspective
 0. Download blender script from [utl](https://download.blender.org/release/Blender3.2) and unzip it at current path.
 1. Replace the desired degrees in [view_ls.txt](view_ls.txt). The first column points to elevation and the second column points to azimuth. 
