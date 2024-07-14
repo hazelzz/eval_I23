@@ -10,11 +10,11 @@ We hope that you will try to complete it by **July 24, 2024**.
 The following are the methods that need to be assessed, with parentheses representing the members responsible for the methodology:
 ## Methods to evaluate
 ### Image to 3D Methods
-- [] [Zero-1-to-3 ++](https://github.com/SUDO-AI-3D/zero123plus) (chz)
+- [] [Zero-1-to-3 ++](https://github.com/SUDO-AI-3D/zero123plus) (ckq)
 - [] [CRM](https://github.com/thu-ml/CRM) (yl)
 - [] [Era3D](https://github.com/pengHTYX/Era3D) (xf)
 - [] [InstantMesh](https://github.com/TencentARC/InstantMesh) (yl)
-- [] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main) (chz)
+- [] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main) (ckq)
 - [] [ViVid-1-to-3](https://github.com/ubc-vision/vivid123) (wyh)
 - [] [Wonder3d](https://github.com/xxlong0/Wonder3D) (xf)
 - [] [Free3D](https://github.com/ubc-vision/vivid123) (wyh)
