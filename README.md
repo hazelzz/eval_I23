@@ -20,10 +20,7 @@ The following are the methods that need to be assessed, with parentheses represe
 - [] [Free3D](https://github.com/ubc-vision/vivid123) (wyh)
 
 ## Dataset
-We have three dataset options:
-1. GSO contains around 1K objects, from which we randomly pick out 300 objects as the evaluation set. （InstantMesh）
-2. SyncDreamer datasets: randomly chose 30 objects ranging from daily objects to animals. [link](https://connecthkuhk-my.sharepoint.com/personal/yuanly_connect_hku_hk/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fyuanly%5Fconnect%5Fhku%5Fhk%2FDocuments%2FSyncDreamer&ga=1)
-3. ViVid-1-to-3: 100 shapes from the Google Scanned Object (GSO) dataset [link](https://drive.google.com/file/d/1A9PJDRD27igX5p88slWVF_QSDKxaZDCZ/view)
+We use datasets including 30 objects in SyncDreamer and 70 objects which randomly chosen. [link](https://drive.google.com/file/d/1-2vuKdzsV44z_g86pFBs-lLxu6-hh55a/view?usp=drive_link)
 
 The dataset can be rendered according to the following content to specify the viewing angle, if necessary, you can render it yourself.
 
