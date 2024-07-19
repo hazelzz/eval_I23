@@ -58,7 +58,14 @@ You can set cammera distance through ```--camera_dist <float>``` which default i
         ...
     ...
     ```
-Recommend selecting fisrt image as input.
+
+### Batch rendering 
+You can batch render cases in the dataset via script `render_datasets.py`. A version of the 35 views rendered by WYH is provided [here](), and the details of the views are in `view_list.txt`. 
+### Prompts generation
+For methods can use text prompts, you can get text prompts in `prompts.csv` which are collected from object description.    
+
+
+
 ## Evaluation Metrics
 0. Run specific method and *tuning hyperparameters*  (set voxel_size=0.5 if possible)
 tips：
