@@ -60,7 +60,7 @@ You can set cammera distance through ```--camera_dist <float>``` which default i
     ```
 
 ### Batch rendering 
-You can batch render cases in the dataset via script `render_datasets.py`. A version of the 35 views rendered by WYH is provided [here](), and the details of the views are in `view_list.txt`. 
+You can batch render cases in the dataset via script `render_datasets.py`. A version of the 35 views rendered by WYH is provided [here](https://drive.google.com/file/d/1SUUY9CS3WCnx4V5Q8Axc-DZZ2hXvgd7B/view?usp=drive_link), and the details of the views are in `view_ls.txt`. 
 ### Prompts generation
 For methods can use text prompts, you can get text prompts in `prompts.csv` which are collected from object description.    
 
