@@ -138,7 +138,7 @@ def main():
     
     msg=f'name\t psnrs\t ssims\t lpipss\t l1losses'
     print(msg)
-    msg=f'{args.name.split("_")[0]}\t {np.mean(psnrs):.5f}\t {np.mean(ssims):.5f}\t {np.mean(lpipss):.5f}\t {np.mean(l1losses):.5f}\t'
+    msg=f'{args.name}\t {np.mean(psnrs):.5f}\t {np.mean(ssims):.5f}\t {np.mean(lpipss):.5f}\t {np.mean(l1losses):.5f}\t'
     print(msg)
     with open('logs/metrics/nvs.log','a') as f:
         f.write(msg+'\n')

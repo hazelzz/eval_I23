@@ -14,10 +14,11 @@ The following are the methods that need to be assessed, with parentheses represe
 - [] [CRM](https://github.com/thu-ml/CRM) (yl)
 - [] [Era3D](https://github.com/pengHTYX/Era3D) (xf)
 - [] [InstantMesh](https://github.com/TencentARC/InstantMesh) (yl)
-- [] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main) (ckq)
-- [] [ViVid-1-to-3](https://github.com/ubc-vision/vivid123) (wyh)
+- [x] [SyncDreamer](https://github.com/liuyuan-pal/SyncDreamer/tree/main) (ckq)
+- [x] [ViVid-1-to-3](https://github.com/ubc-vision/vivid123) (wyh)
 - [] [Wonder3d](https://github.com/xxlong0/Wonder3D) (xf)
 - [] [Free3D](https://github.com/ubc-vision/vivid123) (wyh)
+- [] [TripoSR](https://github.com/VAST-AI-Research/TripoSR)
 
 ## Dataset
 We use datasets including 30 objects in SyncDreamer and 70 objects which randomly chosen. [link](https://drive.google.com/file/d/1-2vuKdzsV44z_g86pFBs-lLxu6-hh55a/view?usp=drive_link)
