@@ -143,6 +143,10 @@ def get_gt_rotate_angle(object_name):
         print("The method is CRM")
         angle[2] += np.pi /2
         angle[1] += np.pi /2
+    elif not object_name.find('TripoSR') == -1:
+        print("The method is TripoSR")
+        angle[0] -= np.pi /2
+        # angle[1] += np.pi /2
     # elif object_name in ['blocks', 'alarm', 'backpack', 'chicken', 'soap', 'grandfather', 'grandmother', 'lion', 'lunch_bag', 'mario', 'oil']:
     #     angle += np.pi / 2 * 3
     # elif object_name in ['elephant', 'school_bus1']:
@@ -234,7 +238,8 @@ def main():
 
     results = f'{args.name}\t{chamfer:.5f}\t{iou:.5f}'
     print(results)
-    with open('logs/geometry.log','a') as f:
+    
+    with open(f"logs/{(args.name).split('_')[0]}_geometry.log",'a') as f:
         f.write(results+'\n')
 
 if __name__=="__main__":

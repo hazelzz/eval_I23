@@ -255,9 +255,10 @@ def save_images(object_file: str) -> None:
     view_ls = np.loadtxt('view_ls.txt')
     pi = math.pi
     # print(view_ls)
-    azimuths = view_ls[:,1]*pi/180
+    view_ls = view_ls.reshape(-1, 2)
+    azimuths = (view_ls[:,1]+20)*pi/180
     elevations = (view_ls[:,0])*pi/180
-    print("elevations:",view_ls[:,0])
+    print("elevations:",view_ls[:,0]+20)
     print("azimuths",view_ls[:,1])
     # return
     

@@ -18,7 +18,7 @@ The following are the methods that need to be assessed, with parentheses represe
 - [x] [ViVid-1-to-3](https://github.com/ubc-vision/vivid123) (wyh)
 - [] [Wonder3d](https://github.com/xxlong0/Wonder3D) (xf)
 - [] [Free3D](https://github.com/ubc-vision/vivid123) (wyh)
-- [] [TripoSR](https://github.com/VAST-AI-Research/TripoSR)
+- [] [TripoSR](https://github.com/VAST-AI-Research/TripoSR) (ckq)
 
 ## Dataset
 We use datasets including 30 objects in SyncDreamer and 70 objects which randomly chosen. [link](https://drive.google.com/file/d/1-2vuKdzsV44z_g86pFBs-lLxu6-hh55a/view?usp=drive_link)
@@ -101,6 +101,7 @@ For example
 ```
 python eval_mesh.py --pr_mesh D:\wyh\InstantMesh\outputs\instant-mesh-large\meshes\Ecoforms_Plant_Container_FB6_Tur.obj --name instantmesh --camera_info_dir Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt --num_images 12 --gt_mesh Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj --output logs
 ```
+The generated mesh may need to be rotated, please check whether it needs to be rotated according to `./logs/xxxx_mesh_gt.ply` and `./logs/xxxx_mesh_pr.ply`. If needed, modify in `get_gt_rotate_angle` function in `eval_mesh.py`.
 
 ## Reporting Results
 Present the evaluation results in a clear and concise manner. The visualization results and tables should be illustrated in [slides](./res.pptx). 
