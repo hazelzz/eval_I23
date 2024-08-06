@@ -94,6 +94,9 @@ This version need to be tested. Please wait for updating.
 # Optional (If encounter "DistutilsPlatformError", use it)
 SET DISTUTILS_USE_SDK=1
 SET MSSdk=1
+set VSTOOLS_VERSION=vs2022
+build-x64Debug.bat
+build-x64Release.bat
 
 python eval_mesh.py --pr_mesh <Path to predicted mesh directory> --pr_type "mesh" or "pcd"   --gt_mesh <Path to ground truth directory> --gt_mesh_colmap <Path to ground truth colmap directory> --gt_mesh_mask <Path to ground truth mesh> --downsample
 ```
