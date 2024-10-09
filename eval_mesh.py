@@ -60,11 +60,11 @@ def ds_and_save(cache_dir, name, pts, cache=False):
     cache_dir.mkdir(exist_ok=True, parents=True)
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(pts)
-    downpcd = pcd
-    # downpcd = pcd.voxel_down_sample(voxel_size=0.01)
+    mesh = pcd
+    # mesh = pcd.voxel_down_sample(voxel_size=0.01)
     if cache:
-        o3d.io.write_point_cloud(str(cache_dir/(name + '.ply')), downpcd)
-    return downpcd
+        o3d.io.write_point_cloud(str(cache_dir/(name + '.ply')), mesh)
+    return mesh
 
 def get_points_from_mesh(mesh, name, output_dir, num_images, POSES, K, H, W, cache=False):
     obj_name = name
@@ -84,8 +84,8 @@ def get_points_from_mesh(mesh, name, output_dir, num_images, POSES, K, H, W, cac
         pts.append(pose_apply(pose_inv, pts_))
 
     pts = np.concatenate(pts, 0).astype(np.float32)
-    downpcd = ds_and_save(cache_dir, obj_name, pts, True)
-    return np.asarray(downpcd.points,np.float32)
+    mesh = ds_and_save(cache_dir, obj_name, pts, True)
+    return np.asarray(mesh.points,np.float32)
 
 def get_points_from_depth(depth_dir, obj_name, output_dir, NUM_IMAGES, POSES, K):
     cache_dir = Path(output_dir)
@@ -104,8 +104,8 @@ def get_points_from_depth(depth_dir, obj_name, output_dir, NUM_IMAGES, POSES, K)
         pts.append(pose_apply(pose_inv, pts_))
 
     pts = np.concatenate(pts, 0).astype(np.float32)
-    downpcd = ds_and_save(cache_dir, obj_name, pts, True)
-    return np.asarray(downpcd.points,np.float32), Height, Width
+    mesh = ds_and_save(cache_dir, obj_name, pts, True)
+    return np.asarray(mesh.points,np.float32), Height, Width
 
 def nearest_dist(pts0, pts1, batch_size=512):
     pts0 = torch.from_numpy(pts0.astype(np.float32)).cuda()
@@ -146,7 +146,27 @@ def get_gt_rotate_angle(object_name):
     elif not object_name.find('TripoSR') == -1:
         print("The method is TripoSR")
         angle[0] -= np.pi /2
-        # angle[1] += np.pi /2
+    elif not object_name.find('Era3D') == -1:
+        print("The method is Era3D")
+        # angle[0] -= np.pi /2
+        angle[2] += np.pi /2
+    # elif not object_name.find('CRM') == -1:
+    elif not object_name.find('vivid123') == -1:
+        print("The method is vivid123")
+        angle[0] += np.pi /2
+    elif not object_name.find('Free3D') == -1:
+        print("The method is Free3D")
+        angle[0] += np.pi /2
+    elif not object_name.find('SyncDreamer') == -1:
+        print("The method is SyncDreamer")
+        angle[0] += np.pi /2
+    elif not object_name.find('Wonder3d') == -1:
+        print("The method is Wonder3d")
+        angle[0] += np.pi /4
+        # angle[2] += np.pi /4
+    #     print("The method is CRM")
+    #     angle[0] -= np.pi /2
+        # angle[2] += np.pi /2
     # elif object_name in ['blocks', 'alarm', 'backpack', 'chicken', 'soap', 'grandfather', 'grandmother', 'lion', 'lunch_bag', 'mario', 'oil']:
     #     angle += np.pi / 2 * 3
     # elif object_name in ['elephant', 'school_bus1']:
@@ -208,11 +228,11 @@ def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pr_mesh', type=str, default=r"D:\wyh\InstantMesh\outputs\instant-mesh-large\meshes\Ecoforms_Plant_Container_FB6_Tur.obj")
-    parser.add_argument('--name', type=str, default="instantmesh")
+    parser.add_argument('--pr_mesh', type=str, default=r"D:\wyh\eval_I23\CRM1_pr.ply")
+    parser.add_argument('--name', type=str, default="CRM")
     parser.add_argument('--camera_info_dir', type=str, default="Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt")
     parser.add_argument('--num_images', type=int , default=6)
-    parser.add_argument('--gt_mesh', type=str, default="Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-mesh\meshes\model.obj")
+    parser.add_argument('--gt_mesh', type=str, default=r"D:\potterylike_dataset_meshes_new\48\1881.156_sm.obj")
     parser.add_argument('--output', type=str, default='output')
     args = parser.parse_args()
     
@@ -228,10 +248,21 @@ def main():
     vertices_pr = transform_pr(vertices_pr, get_gt_rotate_angle(args.name))
     mesh_pr.vertices = o3d.utility.Vector3dVector(vertices_pr)
 
-    # mesh_pr.compute_vertex_normals()
+    # mesh_pr = o3d.io.read_point_cloud(args.pr_mesh)
+    # mesh_gt = o3d.io.read_point_cloud(args.gt_mesh)
+
+    gt_center = mesh_gt.get_center()
+    pr_center = mesh_pr.get_center()
+    translation = gt_center - pr_center
+    mesh_pr.translate(translation)
+    # print("gt_center:",gt_center)
+    # print("pr_center:",pr_center)
+
+    # # mesh_pr.compute_vertex_normals()
     # mesh_pr.paint_uniform_color([0.9, 0.1, 0.1])
-    # mesh_gt.compute_vertex_normals()
+    # # mesh_gt.compute_vertex_normals()
     # mesh_gt.paint_uniform_color([0.1, 0.1, 0.7])
+    # # o3d.visualization.draw_geometries([mesh_gt])
     # o3d.visualization.draw_geometries([mesh_pr, mesh_gt])
     # return
     chamfer, iou = get_chamfer_iou(mesh_pr, mesh_gt, args.name, args.camera_info_dir, args.output, args.num_images, POSES, K)
