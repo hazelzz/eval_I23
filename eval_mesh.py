@@ -24,8 +24,8 @@ def read_depth_objaverse(depth_fn):
     # depth = depth.astype(np.float32) * (DEPTH_MAX-DEPTH_MIN) + DEPTH_MIN
     depth = np.array(depth).astype(np.float32) 
     mask = (depth > DEPTH_VALID_MIN) & (depth < DEPTH_VALID_MAX)
-    plt.imshow(mask)
-    plt.savefig(depth_fn.replace("depth","mask"))
+    # plt.imshow(mask)
+    # plt.savefig(depth_fn.replace("depth","mask"))
     return depth, mask
 
 # H, W, NUM_IMAGES = 256, 256, 16
@@ -76,7 +76,7 @@ def get_points_from_mesh(mesh, name, output_dir, num_images, POSES, K, H, W, cac
 
 
     pts = []
-    for index in range(num_images):
+    for index in range(POSES.shape[0]):
         pose = POSES[index]
         depth, mask = rasterize_depth_map(mesh, pose, K, (H, W))
         pts_ = mask_depth_to_pts(mask, depth, K)
@@ -163,6 +163,9 @@ def get_gt_rotate_angle(object_name):
     elif not object_name.find('Wonder3d') == -1:
         print("The method is Wonder3d")
         angle[0] += np.pi /4
+    elif not object_name.find('instantmesh') == -1:
+        print("The method is instantmesh")
+        angle[1] += np.pi 
         # angle[2] += np.pi /4
     #     print("The method is CRM")
     #     angle[0] -= np.pi /2
@@ -178,11 +181,35 @@ def get_gt_rotate_angle(object_name):
     # angle = np.rad2deg(angle)
     return angle
 
+def normalize_vertices(vertices):
+    """
+    将顶点归一化到范围 [-1, 1]。
+    
+    参数:
+    vertices (np.ndarray): 输入的顶点数组。
+    
+    返回:
+    np.ndarray: 归一化后的顶点数组。
+    """
+    min_vals = vertices.min(axis=0)
+    max_vals = vertices.max(axis=0)
+    
+    # 平移顶点，使其中心为 0
+    vertices_centered = vertices - (min_vals + max_vals) / 2
+    
+    # 计算缩放因子
+    scale = 2 / (max_vals - min_vals).max()
+    
+    # 缩放顶点到 [-1, 1] 范围
+    vertices_normalized = vertices_centered * scale
+    
+    return vertices_normalized
 
 def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K):
-    H, W = 256, 256
+    H, W = 512, 512
     pts_gt = get_points_from_mesh(mesh_gt, name+"_gt", output, NUM_IMAGES, POSES, K, H, W)
     # pts_gt, H, W = get_points_from_depth(gt_dir, name+"_gt", output, NUM_IMAGES, POSES, K)
+    # pts_gt, H, W = get_points_from_depth(gt_dir, name+"_pr", output, NUM_IMAGES, POSES, K)
     pts_pr = get_points_from_mesh(mesh_pr, name+"_pr", output, NUM_IMAGES, POSES, K, H, W)
 
     # pcd_pr=o3d.geometry.PointCloud()
@@ -191,12 +218,12 @@ def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K
     # pcd_gt=o3d.geometry.PointCloud()
     # pcd_gt.points = o3d.utility.Vector3dVector(pts_gt)
     # pcd_gt.paint_uniform_color([0, 1.0, 0])
-    # o3d.visualization.draw_geometries([pcd_pr,pcd_gt])
+    # o3d.visualization.draw_geometries([pcd_gt,pcd_pr])
 
     # compute iou
     size = 128
-    sdf_pr = mesh2sdf.compute(mesh_pr.vertices, mesh_pr.triangles, size, fix=False, return_mesh=False)
-    sdf_gt = mesh2sdf.compute(mesh_gt.vertices, mesh_gt.triangles, size, fix=False, return_mesh=False)
+    sdf_pr = mesh2sdf.compute(np.asarray(mesh_pr.vertices), mesh_pr.triangles, size, fix=False, return_mesh=False, level = 2/size)
+    sdf_gt = mesh2sdf.compute(np.asarray(mesh_gt.vertices), mesh_gt.triangles, size, fix=False, return_mesh=False, level = 2/size)
     vol_pr = sdf_pr<0
     vol_gt = sdf_gt<0
     # plt.subplot(121)
@@ -207,13 +234,13 @@ def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K
     # plt.show()
 
     iou = np.sum(vol_pr & vol_gt)/np.sum(vol_gt | vol_pr)
-    np.save(os.path.join(output,"vol_gt"),vol_gt)
-    np.save(os.path.join(output,"vol_pr"),vol_pr)
+    # np.save(os.path.join(output,"vol_gt"),vol_gt)
+    # np.save(os.path.join(output,"vol_pr"),vol_pr)
     # print(vol_pr.max())
     # print(vol_gt.max())
 
-    dist0 = nearest_dist(pts_pr, pts_gt, batch_size=4096)
-    dist1 = nearest_dist(pts_gt, pts_pr, batch_size=4096)
+    dist0 = nearest_dist(pts_pr, pts_gt, batch_size=512)
+    dist1 = nearest_dist(pts_gt, pts_pr, batch_size=512)
 
     chamfer = (np.mean(dist0) + np.mean(dist1)) / 2
     return chamfer, iou
@@ -228,42 +255,38 @@ def get_chamfer_iou(mesh_pr, mesh_gt, name, gt_dir, output, NUM_IMAGES, POSES, K
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pr_mesh', type=str, default=r"D:\wyh\eval_I23\CRM1_pr.ply")
-    parser.add_argument('--name', type=str, default="CRM")
-    parser.add_argument('--camera_info_dir', type=str, default="Ecoforms_Plant_Container_FB6_Tur\Ecoforms_Plant_Container_FB6_Tur-gt")
-    parser.add_argument('--num_images', type=int , default=6)
-    parser.add_argument('--gt_mesh', type=str, default=r"D:\potterylike_dataset_meshes_new\48\1881.156_sm.obj")
+    parser.add_argument('--pr_mesh', type=str, default=r"D:\wyh\eval_I23\32_instantmeh_yl.obj")
+    parser.add_argument('--name', type=str, default="instantmesh")
+    parser.add_argument('--camera_info_dir', type=str, default=r"F:\potterylike_dataset_meshes_transformed_images\32\model")
+    parser.add_argument('--num_images', type=int , default=35)
+    parser.add_argument('--gt_mesh', type=str, default=r"F:\potterylike_dataset_meshes_transformed\32\model.obj")
     parser.add_argument('--output', type=str, default='output')
     args = parser.parse_args()
     
     K, _, _, _, POSES = read_pickle(os.path.join(args.camera_info_dir, f'meta.pkl'))
     mesh_gt = o3d.io.read_triangle_mesh(args.gt_mesh)
-    mesh_gt.scale(1 / np.max(mesh_gt.get_max_bound() - mesh_gt.get_min_bound()), mesh_gt.get_center())
     vertices_gt = np.asarray(mesh_gt.vertices)
+    vertices_gt  = normalize_vertices(vertices_gt)
     mesh_gt.vertices = o3d.utility.Vector3dVector(vertices_gt)
+    mesh_gt.scale(1 / np.max(mesh_gt.get_max_bound() - mesh_gt.get_min_bound()), mesh_gt.get_center())
 
     mesh_pr = o3d.io.read_triangle_mesh(args.pr_mesh)
-    mesh_pr.scale(1 / np.max(mesh_pr.get_max_bound() - mesh_pr.get_min_bound()), mesh_pr.get_center())
     vertices_pr = np.asarray(mesh_pr.vertices)
+    vertices_pr  = normalize_vertices(vertices_pr)
     vertices_pr = transform_pr(vertices_pr, get_gt_rotate_angle(args.name))
     mesh_pr.vertices = o3d.utility.Vector3dVector(vertices_pr)
+    mesh_pr.scale(1 / np.max(mesh_pr.get_max_bound() - mesh_pr.get_min_bound()), mesh_pr.get_center())
 
     # mesh_pr = o3d.io.read_point_cloud(args.pr_mesh)
     # mesh_gt = o3d.io.read_point_cloud(args.gt_mesh)
-
-    gt_center = mesh_gt.get_center()
-    pr_center = mesh_pr.get_center()
-    translation = gt_center - pr_center
-    mesh_pr.translate(translation)
     # print("gt_center:",gt_center)
     # print("pr_center:",pr_center)
 
-    # # mesh_pr.compute_vertex_normals()
     # mesh_pr.paint_uniform_color([0.9, 0.1, 0.1])
     # # mesh_gt.compute_vertex_normals()
     # mesh_gt.paint_uniform_color([0.1, 0.1, 0.7])
     # # o3d.visualization.draw_geometries([mesh_gt])
-    # o3d.visualization.draw_geometries([mesh_pr, mesh_gt])
+    # o3d.visualization.draw_geometries([mesh_pr,mesh_gt])
     # return
     chamfer, iou = get_chamfer_iou(mesh_pr, mesh_gt, args.name, args.camera_info_dir, args.output, args.num_images, POSES, K)
 
